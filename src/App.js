@@ -2,46 +2,41 @@ import React, { useState, useEffect, useCallback } from "react";
 
 import MoviesList from "./components/MoviesList";
 import AddMovie from "./components/AddMovie";
+import useHttp from "./hooks/use-http";
 import "./App.css";
 
 function App() {
   const [movies, setMovies] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const {
+    isLoading,
+    error,
+    sendRequest: fetchMovies,
+  } = useHttp(
+    {
+      url: "https://react-http-c6eb2-default-rtdb.europe-west1.firebasedatabase.app/movies.json",
+    },
+    transformTasks
+  );
 
-  const fetchMoviesHandler = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(
-        "https://react-http-c6eb2-default-rtdb.europe-west1.firebasedatabase.app/movies.json"
-      );
-      if (!response.ok) {
-        throw new Error("Something went wrong!");
-      }
+  // const {sendRequest : addMovie} = useHttp({url:'https://react-http-c6eb2-default-rtdb.europe-west1.firebasedatabase.app/movies.json'})
 
-      const data = await response.json();
+  const transformTasks = (tasksObj) => {
+    const loadedMovies = [];
 
-      const loadedMovies = [];
-
-      for (const key in data) {
-        loadedMovies.push({
-          id: key,
-          title: data[key].title,
-          openingText: data[key].openingText,
-        });
-      }
-
-      setMovies(loadedMovies);
-    } catch (error) {
-      setError(error.message);
+    for (const key in tasksObj) {
+      loadedMovies.push({
+        id: key,
+        title: tasksObj[key].title,
+        openingText: tasksObj[key].openingText,
+      });
     }
-    setIsLoading(false);
-  }, []);
+
+    setMovies(loadedMovies);
+  };
 
   useEffect(() => {
-    fetchMoviesHandler();
-  }, [fetchMoviesHandler]);
+    fetchMovies();
+  }, []);
 
   async function addMovieHandler(movie) {
     const response = await fetch(
@@ -55,7 +50,6 @@ function App() {
       }
     );
     const data = await response.json();
-    console.log(data);
   }
 
   let content = <p>Found no movies.</p>;
@@ -78,7 +72,7 @@ function App() {
         <AddMovie onAddMovie={addMovieHandler} />
       </section>
       <section>
-        <button onClick={fetchMoviesHandler}>Fetch Movies</button>
+        <button onClick={fetchMovies}>Fetch Movies</button>
       </section>
       <section>{content}</section>
     </React.Fragment>
