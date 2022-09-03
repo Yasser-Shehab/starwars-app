@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 
 import MoviesList from "./components/MoviesList";
 import AddMovie from "./components/AddMovie";
@@ -10,40 +10,29 @@ function App() {
 
   // const {sendRequest : addMovie} = useHttp({url:'https://react-http-c6eb2-default-rtdb.europe-west1.firebasedatabase.app/movies.json'})
 
-  const transformTasks = useCallback((tasksObj) => {
-    const loadedMovies = [];
-
-    for (const key in tasksObj) {
-      loadedMovies.push({
-        id: key,
-        title: tasksObj[key].title,
-        openingText: tasksObj[key].openingText,
-      });
-    }
-
-    setMovies(loadedMovies);
-  }, []);
-  const { isLoading, error, sendRequest: fetchMovies } = useHttp(transformTasks);
+  const { isLoading, error, sendRequest: fetchMovies } = useHttp();
 
   useEffect(() => {
-    fetchMovies({
-      url: "https://react-http-c6eb2-default-rtdb.europe-west1.firebasedatabase.app/movies.json",
-    });
-  }, []);
+    const transformTasks = (tasksObj) => {
+      const loadedMovies = [];
 
-  async function addMovieHandler(movie) {
-    const response = await fetch(
-      "https://react-http-c6eb2-default-rtdb.europe-west1.firebasedatabase.app/movies.json",
-      {
-        method: "POST",
-        body: JSON.stringify(movie),
-        headers: {
-          "Content-Type": "application/json",
-        },
+      for (const key in tasksObj) {
+        loadedMovies.push({
+          id: key,
+          title: tasksObj[key].title,
+          openingText: tasksObj[key].openingText,
+        });
       }
+      setMovies(loadedMovies);
+    };
+
+    fetchMovies(
+      {
+        url: "https://react-http-c6eb2-default-rtdb.europe-west1.firebasedatabase.app/movies.json",
+      },
+      transformTasks
     );
-    const data = await response.json();
-  }
+  }, []);
 
   let content = <p>Found no movies.</p>;
 
@@ -62,7 +51,7 @@ function App() {
   return (
     <React.Fragment>
       <section>
-        <AddMovie onAddMovie={addMovieHandler} />
+        <AddMovie />
       </section>
       <section>
         <button onClick={fetchMovies}>Fetch Movies</button>
