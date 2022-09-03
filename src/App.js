@@ -7,20 +7,10 @@ import "./App.css";
 
 function App() {
   const [movies, setMovies] = useState([]);
-  const {
-    isLoading,
-    error,
-    sendRequest: fetchMovies,
-  } = useHttp(
-    {
-      url: "https://react-http-c6eb2-default-rtdb.europe-west1.firebasedatabase.app/movies.json",
-    },
-    transformTasks
-  );
 
   // const {sendRequest : addMovie} = useHttp({url:'https://react-http-c6eb2-default-rtdb.europe-west1.firebasedatabase.app/movies.json'})
 
-  const transformTasks = (tasksObj) => {
+  const transformTasks = useCallback((tasksObj) => {
     const loadedMovies = [];
 
     for (const key in tasksObj) {
@@ -32,10 +22,13 @@ function App() {
     }
 
     setMovies(loadedMovies);
-  };
+  }, []);
+  const { isLoading, error, sendRequest: fetchMovies } = useHttp(transformTasks);
 
   useEffect(() => {
-    fetchMovies();
+    fetchMovies({
+      url: "https://react-http-c6eb2-default-rtdb.europe-west1.firebasedatabase.app/movies.json",
+    });
   }, []);
 
   async function addMovieHandler(movie) {
